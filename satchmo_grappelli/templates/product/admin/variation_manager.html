@@ -2,10 +2,11 @@
 {% load i18n satchmo_util adminmedia %}
 
 {% block breadcrumbs %}{% if not is_popup %}
-<div class="breadcrumbs">
-     <a href="{% url admin:index %}">{% trans "Home" %}</a> &rsaquo;
-     <a href="{% url satchmo_admin_variation_list %}">{% trans 'Product Variation Manager' %}</a>
-</div>
+    <ul>
+         <li><a href="{% url admin:index %}">{% trans "Home" %}</a></li>
+         <li><a href="{% url satchmo_admin_variation_list %}">{% trans 'List Product Variation Manager' %}</a></li>
+        <li>{% trans 'Product Variation Manager' %} {{ product.name }}</li>
+    </ul>
 {% endif %}{% endblock %}
 
 {% block extrahead %}
@@ -19,211 +20,214 @@
     {% include "shop/_jquery.html" %}
     {% include "shop/_jquery_form.html" %}
     <script type="text/javascript">
-    var satchmo = satchmo || {};
-    
-    satchmo.deselect_all = function() {
-        satchmo.toggle('#variation_products input', false);
-    };
-    
-    satchmo.hide_inactive = function() {
-        $('#variation_products .checkbox input').each(function() {
-            if (!$(this)[0].checked) {
-                $(this).parent().parent().hide();
-            }
-        });
-    };
+        var satchmo = satchmo || {};
 
-    satchmo.toggle = function(cls, state) {
-        $(cls).each(function() { this.checked = state });
-        return false;
-    };
-    
-    satchmo.optionkeys = {{ form.optionkeys|as_json }};
-    
-    satchmo.cross_list = function(list) {
-        var fn = function(head, list, work) {
-            var first = list[0];
-            for (var i=0; i<first.length; i++) {
-                var elt = first[i];
-                var h = (head == "") ? elt : head + "__" + elt;
-                
-                if (list.length > 1) {
-                    fn(h, list.slice(1), work);
-                }
-                else {
-                    work.push(h);
-                }
-            }
-            return work
-        }
-        
-        work = fn("#id_pv", list, []);
-        return work;
-    };
+        satchmo.deselect_all = function() {
+            satchmo.toggle('#variation_products input', false);
+        };
 
-    satchmo.select_all = function() {
-        satchmo.toggle('#variation_options input', true);
-        satchmo.toggle('#variation_products .checkbox input', true);
-    }
-        
-    satchmo.select_these = function(only, state) {
-        
-        keys = satchmo.selected_by_group();
-        if (keys.length > 0) {
-            if (only) {
-                satchmo.deselect_all();
+        satchmo.hide_inactive = function() {
+            $('#variation_products .checkbox input').each(function() {
+                if (!$(this)[0].checked) {
+                    $(this).parent().parent().hide();
+                }
+            });
+        };
+
+        satchmo.toggle = function(cls, state) {
+            $(cls).each(function() { this.checked = state });
+            return false;
+        };
+
+        satchmo.optionkeys = {{ form.optionkeys|as_json }};
+
+        satchmo.cross_list = function(list) {
+            var fn = function(head, list, work) {
+                var first = list[0];
+                for (var i=0; i<first.length; i++) {
+                    var elt = first[i];
+                    var h = (head == "") ? elt : head + "__" + elt;
+
+                    if (list.length > 1) {
+                        fn(h, list.slice(1), work);
+                    }
+                    else {
+                        work.push(h);
+                    }
+                }
+                return work
             }
-            
-            for (var i=0; i<keys.length; i++) {
-                var key = keys[i];
-                satchmo.toggle(key, state);
-            }
+
+            work = fn("#id_pv", list, []);
+            return work;
+        };
+
+        satchmo.select_all = function() {
+            satchmo.toggle('#variation_options input', true);
+            satchmo.toggle('#variation_products .checkbox input', true);
         }
-    };
-    
-    satchmo.selected_by_group = function() {
-        var opts = [];
-    
-        for (var i=0; i<satchmo.optionkeys.length; i++) {
-            var key = satchmo.optionkeys[i];
-            var group = satchmo.optiongroups[key];
-            var group_choices = [];
-            for (var j=0; j<group.length; j++) {
-                var elt = $('#id_optiongroup__' + group[j])[0];
-                if (elt.checked) {
-                    group_choices.push(elt.value)
+
+        satchmo.select_these = function(only, state) {
+
+            keys = satchmo.selected_by_group();
+            if (keys.length > 0) {
+                if (only) {
+                    satchmo.deselect_all();
+                }
+
+                for (var i=0; i<keys.length; i++) {
+                    var key = keys[i];
+                    satchmo.toggle(key, state);
                 }
             }
-            if (group_choices.length > 0) {
-                opts.push(group_choices);
+        };
+
+        satchmo.selected_by_group = function() {
+            var opts = [];
+
+            for (var i=0; i<satchmo.optionkeys.length; i++) {
+                var key = satchmo.optionkeys[i];
+                var group = satchmo.optiongroups[key];
+                var group_choices = [];
+                for (var j=0; j<group.length; j++) {
+                    var elt = $('#id_optiongroup__' + group[j])[0];
+                    if (elt.checked) {
+                        group_choices.push(elt.value)
+                    }
+                }
+                if (group_choices.length > 0) {
+                    opts.push(group_choices);
+                }
             }
-        }
-        
-        if (opts.length != satchmo.optionkeys.length) {
-            alert('You have to pick one from each optiongroup before this will work');
-            return [];
-        }
-        
-        return satchmo.cross_list(opts);
-    };
 
-	satchmo.submit_dirty_variations = function() {
-		var ct = 0;
-		var dirty = {};
-		var dirty_ids = []
-		$('form #variation_products input').each(
-			function() {
-				if (this.id != 'id_dirty') {
-					var parts = this.id.split("__");
-					parts.shift();
-		            var key = parts.join("__");
-					if (!dirty[key]) {
-						var oldval = satchmo.initial_vals[this.id];
-						if ($(this).is('input[@type=text]')) {
-							var newval = $(this).fieldValue();
-							var changed = (oldval + "" != newval + "");
-						}
-						else {
-							var newval = this.checked;
-							var changed = (oldval != newval);
-						}
-						if (changed) {
-							try { log.debug('Dirty ' + key); } catch(err) {};		            
-							dirty[key] = true;
-							dirty_ids.push(key);
-						}
-					}
-				}
-			}
-		);
-		
-		if (dirty_ids.length == 0) {
-			alert('nothing has been changed');
-			return false;
-		}
-		else {
-			$('#id_dirty').attr('value', dirty_ids.join(','));
-		}
-		
-		return true;
-	};
+            if (opts.length != satchmo.optionkeys.length) {
+                alert('You have to pick one from each optiongroup before this will work');
+                return [];
+            }
 
-    satchmo.show_all = function() {
-        $('tr.optionrow').each(function() {
-            $(this).show();
-        });
-    };
+            return satchmo.cross_list(opts);
+        };
 
-    satchmo.initial_vals = {};
+        satchmo.submit_dirty_variations = function() {
+            var ct = 0;
+            var dirty = {};
+            var dirty_ids = []
+            $('form #variation_products input').each(
+                function() {
+                    if (this.id != 'id_dirty') {
+                        var parts = this.id.split("__");
+                        parts.shift();
+                        var key = parts.join("__");
+                        if (!dirty[key]) {
+                            var oldval = satchmo.initial_vals[this.id];
+                            if ($(this).is('input[@type=text]')) {
+                                var newval = $(this).fieldValue();
+                                var changed = (oldval + "" != newval + "");
+                            }
+                            else {
+                                var newval = this.checked;
+                                var changed = (oldval != newval);
+                            }
+                            if (changed) {
+                                try { log.debug('Dirty ' + key); } catch(err) {};
+                                dirty[key] = true;
+                                dirty_ids.push(key);
+                            }
+                        }
+                    }
+                }
+            );
 
-    $(function() {
-        // make a list of the optiongroups and associated checkbox keys for easier lookup later
-        satchmo.optiongroups = {};
-        for (var i=0; i<satchmo.optionkeys.length; i++) {
-            satchmo.optiongroups[satchmo.optionkeys[i]] = [];
-        }
+            if (dirty_ids.length == 0) {
+                alert('nothing has been changed');
+                return false;
+            }
+            else {
+                $('#id_dirty').attr('value', dirty_ids.join(','));
+            }
 
-		// Get initial values
-		$('form #variation_products input').each(
-			function() {
-				if ($(this).is('input[@type=text]')) {
-					val = $(this).fieldValue();
-				}
-				else {
-					val = this.checked;
-				}
-				satchmo.initial_vals[this.id] = val;
-			}
-		)
-        
-        $('#variation_options .checkbox input').each(function() {
-            var parts = this.id.split("__");
-            var key = parts[1];
-            var group = key.split("_")[0];
+            return true;
+        };
 
-            satchmo.optiongroups['optiongroup__' + group].push(key)
-        })
+        satchmo.show_all = function() {
+            $('tr.optionrow').each(function() {
+                $(this).show();
+            });
+        };
 
-        $('#select_all').click(function() {
-            satchmo.select_all();
-            return false;
-        });
-    
-        $('#select_these').click(function() {
-            satchmo.select_these(false, true);
-            return false;
-        });
-        
-        $('#select_only_these').click(function() {
-            satchmo.select_these(true, true);
-            return false;
-        });
-        
-        $('#deselect_these').click(function() {
-            satchmo.select_these(false, false);
-            return false;
-        });
-        
-        $('#deselect_all').click(function() {
-            satchmo.deselect_all();
-            return false;
-        });
-        
-        $('#show_all').click(function() {
-            satchmo.show_all();
-            return false;
-        });
-        
-        $('#hide_inactive').click(function() {
-            satchmo.hide_inactive();
-            return false;
-        });
+        satchmo.initial_vals = {};
+        (function($){
 
-		$('#id_submit').click(function() {
-			satchmo.submit_dirty_variations();
-		})
-        
-    });
+
+            $(function() {
+                // make a list of the optiongroups and associated checkbox keys for easier lookup later
+                satchmo.optiongroups = {};
+                for (var i=0; i<satchmo.optionkeys.length; i++) {
+                    satchmo.optiongroups[satchmo.optionkeys[i]] = [];
+                }
+
+                // Get initial values
+                $('form #variation_products input').each(
+                    function() {
+                        if ($(this).is('input[@type=text]')) {
+                            val = $(this).fieldValue();
+                        }
+                        else {
+                            val = this.checked;
+                        }
+                        satchmo.initial_vals[this.id] = val;
+                    }
+                )
+
+                $('#variation_options .checkbox input').each(function() {
+                    var parts = this.id.split("__");
+                    var key = parts[1];
+                    var group = key.split("_")[0];
+
+                    satchmo.optiongroups['optiongroup__' + group].push(key)
+                })
+
+                $('#select_all').click(function() {
+                    satchmo.select_all();
+                    return false;
+                });
+
+                $('#select_these').click(function() {
+                    satchmo.select_these(false, true);
+                    return false;
+                });
+
+                $('#select_only_these').click(function() {
+                    satchmo.select_these(true, true);
+                    return false;
+                });
+
+                $('#deselect_these').click(function() {
+                    satchmo.select_these(false, false);
+                    return false;
+                });
+
+                $('#deselect_all').click(function() {
+                    satchmo.deselect_all();
+                    return false;
+                });
+
+                $('#show_all').click(function() {
+                    satchmo.show_all();
+                    return false;
+                });
+
+                $('#hide_inactive').click(function() {
+                    satchmo.hide_inactive();
+                    return false;
+                });
+
+                $('#id_submit').click(function() {
+                    satchmo.submit_dirty_variations();
+                })
+
+            });
+        })(grp.jQuery);
     </script>
 {% endblock %}
 {% block content %}
