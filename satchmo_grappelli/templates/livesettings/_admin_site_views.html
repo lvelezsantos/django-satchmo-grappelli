@@ -1,0 +1,11 @@
+{% load i18n %}
+<div id="content-related">
+    <div class="grp-module" id="sites-module">
+        <h2>{% trans 'Sites' %}</h2>
+        {% for label, link in links %}
+        <div class="grp-row">
+            <a href="{{ link }}">{{ label }}</a>
+        </div>
+        {% endfor %}
+	</div>
+</div>

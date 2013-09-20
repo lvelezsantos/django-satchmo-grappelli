@@ -1,0 +1,131 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_static config_tags %}{% load url from future %}
+
+{% block breadcrumbs %}
+<ul>
+	<li><a href="{% url 'admin:index' %}">{% trans "Home" %}</a></li>
+	<li>{% trans "Edit Site Settings" %}</li>
+</ul>
+{% endblock %}
+
+{% block page-tools %}
+    <ul>
+        <li><a href="javascript://" class="grp-tool" id="grp-open-all" title="Open All Items">&nbsp;</a></li>
+        <li><a href="javascript://" class="grp-tool" id="grp-close-all" title="Close All Items">&nbsp;</a></li>
+    </ul>
+{% endblock %}
+
+{% block messages %}
+    {% if messages %}
+    <ul class="messagelist">{% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}</ul>
+    {% endif %}
+{% endblock messages %}
+
+{% block content %}
+
+<span style="clear: both;"></span>
+<div id="content-main" class="g-d-c-fluid">
+{% if not use_db %}
+	<p>{% trans "Livesettings are disabled for this site." %}</p>
+	<p>{% trans "All configuration options must be edited in the site settings.py file" %}</p>
+	</div>
+	{% admin_site_views 'satchmo_site_settings' %}
+{% else %}
+	{% if form.errors %}
+		<p class="errornote">
+		{% blocktrans count form.errors|length as counter %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}
+		</p>
+	{% endif %}
+    <div class="g-d-16">
+	{% if form.fields %}
+        <form method="post" id="settingsform">{% csrf_token %}
+            {% for field in form %}
+                {% if field.is_hidden %}
+                    <tr style="display: none;"><td>{{ field }}</td></tr>
+                {% else %}
+                    {% ifchanged field.field.group %}
+                        {% with field.field.group as group %}
+                            {% if not forloop.first %}
+                                </fieldset>
+                                {% comment %}</table>
+                                </fieldset>
+                                {% endcomment %}
+                            {% endif %}
+                            <fieldset class="grp-module grp-collapse grp-closed">
+                                <h2 class="grp-collapse-handler" id="{{ group.key }}">{{ group.name }}</h2>
+                                {% comment %}<table summary="{% blocktrans with group.name as name %}Group settings: {{ name }}{% endblocktrans %}" style="width: 100%">{% endcomment %}
+                        {% endwith %}
+                    {% endifchanged %}
+                        <div class="grp-row {% if field.errors %}grp-errors{% endif %}">
+                            <div class="l-2c-fluid l-d-4">
+                                <div class="c-1">
+                                    <label {% if field.field.required %}class="required"{% endif %}>{{ field.label }}</label>
+                                </div>
+                                <div class="c-2">
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        {{ field.errors }}
+                                    {% endif %}
+                                    {% if field.help_text %}
+                                        <p class="grp-help">{{ field.help_text|break_at:40|safe }}</p>
+                                    {% endif %}
+                                    {% if field.field.default_text %}
+                                        <p class="grp-help">{{ field.field.default_text|break_at:40}}</p>
+                                {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </fieldset>
+
+        <br class="clear:both;" />
+        <input class="grp-float-right" type="submit" value="{% trans 'Update Settings' %}" />
+        </form>
+	{% else %}
+		<p>{% trans "You don't have permission to edit values." %}</p>
+	{% endif %}
+    </div>
+    <div class="g-d-8">
+        {% admin_site_views 'satchmo_site_settings' %}
+        <div class="grp-module">
+            <h2>{% trans 'Options' %}</h2>
+            <div class="grp-row">
+                <a href="{% url 'settings_export' %}">{% trans 'Export' %}</a>
+            </div>
+
+        </div>
+    </div>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script type="text/javascript">
+        (function($) {
+            $(document).ready(function(){
+                 // PAGE-TOOLS HANDLERS
+                $("#content-main .grp-module").grp_collapsible();
+
+                $("a#grp-open-all").bind("click", function(){
+                    $("#content-main .grp-collapse-handler").each(function() {
+                        $(this).parent(".grp-collapse").removeClass("grp-closed").addClass("grp-open");
+                    });
+                });
+                $("a#grp-close-all").bind("click", function(){
+                    $("#content-main .grp-collapse-handler").each(function() {
+                        $(this).parent(".grp-collapse").removeClass("grp-open").addClass("grp-closed");
+                    });
+                });
+            });
+
+            // INITIALIZE COLLAPSE
+
+
+        })(grp.jQuery);
+
+    </script>
+{% endblock %}

@@ -18,9 +18,10 @@
         <li>{% trans "Home" %}</li>
     </ul>
 {% endblock %}
+
 {% block content_title %}
     {% if title %}
-        <header><h1>{{ title }}</h1></header>
+        <header><h1>{{ shop_name }}. {{ title }}</h1></header>
     {% endif %}
 {% endblock %}
 
