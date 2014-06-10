@@ -10,7 +10,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name='django-satchmo-grappelli',
-    version='0.1',
+    version='0.2',
     packages=['satchmo_grappelli'],
     include_package_data=True,
     license='MIT License',  # example license
@@ -20,7 +20,7 @@ setup(
     author='Luis Velez',
     author_email='lvelezsantos@gmail.com',
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: Beta",
         'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',
