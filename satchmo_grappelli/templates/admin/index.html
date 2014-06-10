@@ -2,6 +2,7 @@
 
 <!-- LOADING -->
 {% load i18n grp_tags log %}
+{% load url from future %}
 
 <!-- JAVASCRIPTS -->
 {% block javascripts %}
@@ -63,20 +64,25 @@
         <div class="g-d-6 g-d-l">
             <div class="grp-module">
                 <h2>{% trans "Admin Tools" %}</h2>
+                {% if satchmo_grappelli_use_filebrowser %}
+                    <div class="grp-row">
+                        <a href="{% url 'filebrowser:fb_browse' %}">{% trans "File Browser" %}</a><br/>
+                    </div>
+                {% endif %}
                 <div class="grp-row">
-                    <a href="{% url satchmo_site_settings %}">{% trans "Edit Site Settings" %}</a><br/>
+                    <a href="{% url 'satchmo_site_settings' %}">{% trans "Edit Site Settings" %}</a><br/>
                 </div>
                 <div class="grp-row">
-                    <a href="{% url satchmo_admin_edit_inventory %}">{% trans 'Edit Inventory' %}</a><br/>
+                    <a href="{% url 'satchmo_admin_edit_inventory' %}">{% trans 'Edit Inventory' %}</a><br/>
                 </div>
                 <div class="grp-row">
-                    <a href="{% url satchmo_admin_product_export %}">{% trans 'Export Product Defs' %}</a><br/>
+                    <a href="{% url 'satchmo_admin_product_export' %}">{% trans 'Export Product Defs' %}</a><br/>
                 </div>
                 <div class="grp-row">
-                    <a href="{% url satchmo_admin_variation_list %}">{% trans 'Product Variation Manager' %}</a><br/>
+                    <a href="{% url 'satchmo_admin_variation_list' %}">{% trans 'Product Variation Manager' %}</a><br/>
                 </div>
                 <div class="grp-row">
-                    <a href="{% url keyedcache_stats %}">{% trans 'Cache Status' %}</a><br/>
+                    <a href="{% url 'keyedcache_stats' %}">{% trans 'Cache Status' %}</a><br/>
                 </div>
 
             </div>
